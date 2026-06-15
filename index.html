@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0A0E1A" />
+    <title>我的面板 — Personal Dashboard</title>
+    <!-- 在 Vue 加载前先应用主题，避免闪白 -->
+    <script>
+      (function () {
+        try {
+          const v = localStorage.getItem('my-dashboard:theme') || 'system'
+          const dark = v === 'system'
+            ? window.matchMedia('(prefers-color-scheme: dark)').matches
+            : v === 'dark'
+          if (dark) document.documentElement.classList.add('dark')
+        } catch {}
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
