@@ -25,7 +25,8 @@ const {
   remaining,
   stage,
   updateCurrent,
-  updateTarget
+  updateTarget,
+  clearHistory
 } = useBalance()
 
 const { fire, fireTarget, flavorMeta } = useFire()
@@ -44,6 +45,7 @@ watch(
 const showEditAmount = ref(false)
 const showEditTarget = ref(false)   // 普通目标编辑（FIRE 关闭时用）
 const showFireConfig = ref(false)   // FIRE 流派配置（FIRE 开启时用）
+const showClearHistory = ref(false) // 清空更新记录确认
 const editAmountValue = ref(0)
 const editTargetValue = ref(0)
 
@@ -79,15 +81,20 @@ function saveTarget() {
   showEditTarget.value = false
 }
 
+function confirmClearHistory() {
+  clearHistory()
+  showClearHistory.value = false
+}
+
 function fmtDate(iso) {
   const d = new Date(iso)
-  // 跨年才带年份前缀，避免 50 条跨年记录里出现两个无法区分的 "1-15"
-  const yearPrefix = d.getFullYear() !== new Date().getFullYear() ? `${d.getFullYear()}/` : ''
-  const mm = d.getMonth() + 1
+  const y = d.getFullYear()
+  const mo = String(d.getMonth() + 1).padStart(2, '0')
   const dd = String(d.getDate()).padStart(2, '0')
   const hh = String(d.getHours()).padStart(2, '0')
   const mi = String(d.getMinutes()).padStart(2, '0')
-  return `${yearPrefix}${mm}-${dd} ${hh}:${mi}`
+  const ss = String(d.getSeconds()).padStart(2, '0')
+  return `${y}-${mo}-${dd} ${hh}:${mi}:${ss}`
 }
 
 // 鼓励语 — 跟阶段挂钩
@@ -328,7 +335,7 @@ const fireFormulaText = computed(() => {
     <div class="card p-6 animate-slide-up" style="animation-delay: 120ms">
       <div class="flex items-center justify-between mb-4">
         <h2 class="font-bold flex items-center gap-2">
-          📊 余额趋势
+          📈 余额趋势
         </h2>
         <span class="text-xs text-ink-400">悬浮查看</span>
       </div>
@@ -345,9 +352,23 @@ const fireFormulaText = computed(() => {
     <div class="card p-6 animate-slide-up" style="animation-delay: 200ms">
       <div class="flex items-center justify-between mb-4">
         <h2 class="font-bold flex items-center gap-2">
-          📈 更新记录
+          📝 更新记录
         </h2>
-        <span class="text-xs text-ink-400">{{ history.length }} 条</span>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-ink-400">{{ history.length }} 条</span>
+          <button
+            v-if="history.length"
+            @click="showClearHistory = true"
+            class="btn-ghost !p-1 text-ink-400 hover:!text-rose-400"
+            title="清空更新记录"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div v-if="history.length" class="space-y-1 max-h-80 overflow-y-auto">
@@ -361,6 +382,7 @@ const fireFormulaText = computed(() => {
               :currency="balance.currency"
               size="text-sm"
               unit-size="text-[0.7em]"
+              :show-decimals="true"
             />
           </div>
           <div class="flex items-center gap-2">
@@ -511,6 +533,26 @@ const fireFormulaText = computed(() => {
 
         <div class="flex justify-end">
           <button @click="showFireConfig = false" class="btn-primary">完成</button>
+        </div>
+      </div>
+    </Modal>
+
+    <!-- 清空更新记录确认 -->
+    <Modal v-model="showClearHistory" title="清空更新记录？">
+      <div class="space-y-4">
+        <div class="text-sm space-y-2">
+          <p>将永久删除全部 <strong class="font-mono">{{ history.length }}</strong> 条更新记录，
+            <strong class="text-rose-500">此操作不可撤销</strong>。</p>
+          <p class="text-ink-500 dark:text-ink-400">
+            余额、目标和 FIRE 配置不受影响，只清空记录。
+          </p>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button @click="showClearHistory = false" class="btn-ghost">取消</button>
+          <button @click="confirmClearHistory"
+                  class="btn-primary !bg-rose-500 hover:!bg-rose-600">
+            确认清空
+          </button>
         </div>
       </div>
     </Modal>
