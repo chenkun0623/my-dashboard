@@ -136,8 +136,9 @@ export function useBalance() {
   /**
    * 更新当前金额，自动追加历史记录
    *
-   * 历史是只增的审计流水：用户不能手动删除（避免数据失真），
-   * 唯一的退场路径是"超过 50 条 → 自动丢掉最早的一条"。
+   * 历史只能批量清空（clearHistory），不能逐条删除——
+   * 这样保留了"对照价值"，又给"重新开始"留了一条出路。
+   * 单条退场的唯一路径仍是"超过 50 条 → 自动丢掉最早的一条"。
    */
   function updateCurrent(newAmount) {
     const change = newAmount - balance.value.current
@@ -156,6 +157,14 @@ export function useBalance() {
     balance.value.target = newTarget
   }
 
+  /**
+   * 清空更新记录（不动当前余额 / 目标 / 货币）
+   * localStorage 由 watch 自动同步：history 变成 [] → 写回去
+   */
+  function clearHistory() {
+    history.value = []
+  }
+
   /** 清空所有数据（设置里用） */
   function reset() {
     balance.value = { ...DEFAULT_BALANCE }
@@ -170,6 +179,7 @@ export function useBalance() {
     stage,
     updateCurrent,
     updateTarget,
+    clearHistory,
     reset
   }
 }
