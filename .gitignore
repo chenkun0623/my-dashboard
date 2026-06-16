@@ -12,3 +12,4 @@ Thumbs.db
 # Claude
 .claude/
 .agents/
+skills-lock.json
