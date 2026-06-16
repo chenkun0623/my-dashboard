@@ -14,7 +14,8 @@ const props = defineProps({
   colorLight: { type: String, default: '#818CF8' }
 })
 
-// SVG viewBox：固定坐标系，CSS 缩放
+// SVG viewBox：固定 600×220 的内部坐标系，外层用 width:100% 自适应缩放
+// —— 所以下面坐标全用常量算，不用 ResizeObserver 监听容器尺寸
 const W = 600
 const H = 220
 const PAD = { top: 20, right: 20, bottom: 30, left: 50 }
