@@ -30,6 +30,8 @@ function applyTheme(mode) {
   isDark.value = dark
 }
 
+// 全局只初始化一次：监听器和 watch 只挂一份，
+// 后续 useTheme() 调用复用同一个 theme / isDark ref
 let inited = false
 export function useTheme() {
   if (!inited) {
