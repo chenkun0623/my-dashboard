@@ -1,14 +1,12 @@
 <script setup>
 /**
- * App 外壳 — 顶栏 + 主题切换 + 当前页内容槽位
+ * App 外壳 — 顶栏 + 主题切换 + 当前路由内容槽位
  *
- * 现在只渲染财富页（Wealth）。后续加新页面有两种走法：
- *   1) 简单：在这里加个 ref('wealth') 切 + 顶栏切换按钮，import 多个 page 组件
- *   2) 正经：等页面 ≥3 个、需要 URL 直达时再上 vue-router
- * 一个页面的时候不用提前折腾，留好 pages/ 目录就够了。
+ * 页面内容由 vue-router 渲染。需要安全保护的页面在 router 里配置
+ * meta.requiresAuth，统一走安全码门禁。
  */
+import { RouterView } from 'vue-router'
 import ThemeToggle from './components/ThemeToggle.vue'
-import Wealth from './pages/Wealth.vue'
 </script>
 
 <template>
@@ -38,7 +36,7 @@ import Wealth from './pages/Wealth.vue'
 
     <main class="flex-1 px-4 sm:px-8 pb-12">
       <div class="max-w-4xl mx-auto">
-        <Wealth />
+        <RouterView />
       </div>
     </main>
   </div>
