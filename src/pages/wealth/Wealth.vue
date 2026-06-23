@@ -1,6 +1,6 @@
 <script setup>
 /**
- * 财富页 — 余额追踪 + 目标进度 + 趋势 + 历史
+ * 财富页 — 余额追踪 + 目标进度 + 更新记录
  *
  * 数据全在 useBalance() 里，模块级单例，所以本组件可以多处实例化，
  * 不会丢同步。布局上只负责"max-w-4xl 容器内"的内容，外层壳由 App.vue 提供。
@@ -11,12 +11,11 @@
  *     这样下游 progress / stage / 趋势图目标线全套逻辑都不用变
  */
 import { ref, computed, watch } from 'vue'
-import { useBalance } from '../composables/useBalance'
-import { useFire, FIRE_FLAVORS } from '../composables/useFire'
-import { fmt2, fmtInt } from '../utils/money'
-import Modal from '../components/Modal.vue'
-import MoneyDisplay from '../components/MoneyDisplay.vue'
-import TrendChart from '../components/TrendChart.vue'
+import { useBalance } from '../../composables/useBalance'
+import { useFire, FIRE_FLAVORS } from '../../composables/useFire'
+import { fmt2 } from '../../utils/money'
+import Modal from '../../components/Modal.vue'
+import MoneyDisplay from '../../components/MoneyDisplay.vue'
 
 const {
   balance,
@@ -36,7 +35,7 @@ const { fire, fireTarget, flavorMeta } = useFire()
 watch(
   [() => fire.value.enabled, fireTarget],
   ([enabled, target]) => {
-    if (enabled && target > 0) updateTarget(Math.round(target))
+    if (enabled && target > 0) updateTarget(Math.round(target * 100) / 100)
   },
   { immediate: true }
 )
@@ -62,13 +61,23 @@ function openEditTarget() {
   showEditTarget.value = true
 }
 
+function normalizeMoneyInput(value) {
+  const raw = String(value).trim()
+  if (raw === '') return ''
+  const cleaned = raw.replace(/[^\d.]/g, '')
+  const [intPart, ...decimalParts] = cleaned.split('.')
+  if (!decimalParts.length) return intPart
+  return `${intPart}.${decimalParts.join('').slice(0, 2)}`
+}
+
 function saveAmount() {
   // 显式拒绝空串：Number('') === 0 会把"清空再保存"误判为"把余额清零"
   const raw = String(editAmountValue.value).trim()
   if (raw === '') return
   const v = Number(raw)
   if (isNaN(v) || v < 0) return
-  updateCurrent(v)
+  // 保存层面再兜底一次：复制粘贴 / 浏览器兼容问题也只能落到两位小数
+  updateCurrent(Math.round(v * 100) / 100)
   showEditAmount.value = false
 }
 
@@ -77,7 +86,7 @@ function saveTarget() {
   if (raw === '') return
   const v = Number(raw)
   if (isNaN(v) || v <= 0) return
-  updateTarget(v)
+  updateTarget(Math.round(v * 100) / 100)
   showEditTarget.value = false
 }
 
@@ -114,18 +123,18 @@ const fireFormulaText = computed(() => {
   const ae = Number(fire.value.annualExpense) || 0
   if (ae <= 0) return ''
   const c = balance.value.currency
-  const aeStr = fmtInt(ae)
+  const aeStr = fmt2(ae)
   switch (fire.value.flavor) {
     case 'lean':
     case 'fat':
-      return `${c}${aeStr} × 25 = ${c}${fmtInt(ae * 25)}`
+      return `${c}${aeStr} × 25 = ${c}${fmt2(ae * 25)}`
     case 'barista':
-      return `${c}${aeStr} × 12.5 = ${c}${fmtInt(ae * 12.5)}`
+      return `${c}${aeStr} × 12.5 = ${c}${fmt2(ae * 12.5)}`
     case 'coast': {
       const yrs = Math.max(0, Number(fire.value.retireAge) - Number(fire.value.currentAge))
       const r = Number(fire.value.expectedReturn) || 0
       const rPct = (r * 100).toFixed(0)
-      return `${c}${aeStr} × 25 ÷ (1+${rPct}%)^${yrs} ≈ ${c}${fmtInt(fireTarget.value)}`
+      return `${c}${aeStr} × 25 ÷ (1+${rPct}%)^${yrs} ≈ ${c}${fmt2(fireTarget.value)}`
     }
     default:
       return ''
@@ -255,6 +264,7 @@ const fireFormulaText = computed(() => {
               size="text-2xl"
               unit-size="text-sm"
               class="font-bold"
+              :show-decimals="true"
             />
             <div class="text-xs text-ink-400 mt-1 font-mono">{{ fireFormulaText }}</div>
           </div>
@@ -275,6 +285,7 @@ const fireFormulaText = computed(() => {
               size="text-2xl"
               unit-size="text-sm"
               class="font-bold"
+              :show-decimals="true"
             />
           </div>
           <button @click="openEditTarget" class="btn-ghost text-xs">
@@ -323,29 +334,13 @@ const fireFormulaText = computed(() => {
             size="text-sm"
             unit-size="text-[0.7em]"
             class="text-ink-900 dark:text-ink-50 font-medium"
+            :show-decimals="true"
           />
         </div>
         <div class="text-right transition-colors" :class="stage.textCls">
           {{ encourage }}
         </div>
       </div>
-    </div>
-
-    <!-- 趋势图卡片 -->
-    <div class="card p-6 animate-slide-up" style="animation-delay: 120ms">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="font-bold flex items-center gap-2">
-          📈 余额趋势
-        </h2>
-        <span class="text-xs text-ink-400">悬浮查看</span>
-      </div>
-      <TrendChart
-        :data="history"
-        :target="balance.target"
-        :currency="balance.currency"
-        :color="stage.hex"
-        :color-light="stage.hexLight"
-      />
     </div>
 
     <!-- 历史记录 -->
@@ -373,23 +368,24 @@ const fireFormulaText = computed(() => {
 
       <div v-if="history.length" class="space-y-1 max-h-80 overflow-y-auto">
         <div v-for="h in history" :key="h.date"
-             class="group flex items-center justify-between px-3 py-2 rounded-lg
-                    hover:bg-ink-100 dark:hover:bg-ink-800/50 transition-colors text-sm">
-          <div class="flex items-center gap-3 min-w-0">
-            <span class="text-xs text-ink-400 font-mono shrink-0">{{ fmtDate(h.date) }}</span>
+             class="px-3 py-2.5 rounded-lg hover:bg-ink-100 dark:hover:bg-ink-800/50
+                    transition-colors text-sm">
+          <div class="flex items-start justify-between gap-3">
             <MoneyDisplay
               :value="h.amount"
               :currency="balance.currency"
-              size="text-sm"
+              size="text-base sm:text-sm"
               unit-size="text-[0.7em]"
+              class="min-w-0"
               :show-decimals="true"
             />
-          </div>
-          <div class="flex items-center gap-2">
-            <span v-if="h.change !== 0" class="text-xs font-mono"
+            <span v-if="h.change !== 0" class="text-xs font-mono shrink-0 pt-0.5"
                   :class="h.change > 0 ? 'text-success-400' : 'text-rose-400'">
               {{ h.change > 0 ? '+' : '-' }}{{ fmt2(Math.abs(h.change)) }}
             </span>
+          </div>
+          <div class="mt-1 text-xs text-ink-400 font-mono">
+            {{ fmtDate(h.date) }}
           </div>
         </div>
       </div>
@@ -418,6 +414,7 @@ const fireFormulaText = computed(() => {
               min="0"
               class="input flex-1 text-lg font-mono"
               placeholder="0.00"
+              @input="editAmountValue = normalizeMoneyInput($event.target.value)"
               @keydown.enter="saveAmount"
               autofocus
             />
@@ -443,10 +440,11 @@ const fireFormulaText = computed(() => {
             <input
               v-model="editTargetValue"
               type="number"
-              step="100"
+              step="0.01"
               min="1"
               class="input flex-1 text-lg font-mono"
-              placeholder="100000"
+              placeholder="100000.00"
+              @input="editTargetValue = normalizeMoneyInput($event.target.value)"
               @keydown.enter="saveTarget"
               autofocus
             />
@@ -472,9 +470,10 @@ const fireFormulaText = computed(() => {
           <input
             v-model.number="fire.annualExpense"
             type="number"
-            step="1000"
+            step="0.01"
             min="0"
             class="input w-full font-mono"
+            @input="fire.annualExpense = normalizeMoneyInput($event.target.value)"
           />
           <p class="text-xs text-ink-400 mt-1.5">{{ flavorMeta.hint }}</p>
         </div>
@@ -527,6 +526,7 @@ const fireFormulaText = computed(() => {
             size="text-lg"
             unit-size="text-xs"
             class="font-bold"
+            :show-decimals="true"
           />
           <div class="text-xs text-ink-400 mt-1 font-mono">{{ fireFormulaText }}</div>
         </div>
