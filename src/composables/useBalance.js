@@ -165,12 +165,6 @@ export function useBalance() {
     history.value = []
   }
 
-  /** 清空所有数据（设置里用） */
-  function reset() {
-    balance.value = { ...DEFAULT_BALANCE }
-    history.value = []
-  }
-
   return {
     balance,
     history,
@@ -179,7 +173,6 @@ export function useBalance() {
     stage,
     updateCurrent,
     updateTarget,
-    clearHistory,
-    reset
+    clearHistory
   }
 }
