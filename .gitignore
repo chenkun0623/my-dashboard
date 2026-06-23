@@ -10,6 +10,7 @@ Thumbs.db
 .idea/
 
 # Claude
-.claude/
 .agents/
+.claude/
+.codex/
 skills-lock.json
