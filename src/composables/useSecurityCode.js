@@ -15,17 +15,32 @@ export function isValidCode(code) {
   return /^\d{6}$/.test(String(code ?? ''))
 }
 
-function safeGet(storage, key) {
+function safeGet(storageName, key) {
   try {
+    const storage = globalThis[storageName]
+    if (!storage) return null
     return storage.getItem(key)
   } catch {
     return null
   }
 }
 
-function safeSet(storage, key, value) {
+function safeSet(storageName, key, value) {
   try {
+    const storage = globalThis[storageName]
+    if (!storage) return false
     storage.setItem(key, value)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function safeRemove(storageName, key) {
+  try {
+    const storage = globalThis[storageName]
+    if (!storage) return false
+    storage.removeItem(key)
     return true
   } catch {
     return false
@@ -44,14 +59,14 @@ async function sha256(text) {
 }
 
 export function hasSecurityCode() {
-  return Boolean(safeGet(localStorage, SECURITY_HASH_KEY))
+  return Boolean(safeGet('localStorage', SECURITY_HASH_KEY))
 }
 
 export async function setSecurityCode(code) {
   if (!isValidCode(code)) return { ok: false, error: '请输入 6 位数字安全码' }
   try {
     const hash = await sha256(code)
-    const saved = safeSet(localStorage, SECURITY_HASH_KEY, hash)
+    const saved = safeSet('localStorage', SECURITY_HASH_KEY, hash)
     if (!saved) return { ok: false, error: '安全码保存失败，请检查浏览器存储权限' }
     return { ok: true }
   } catch (err) {
@@ -61,7 +76,7 @@ export async function setSecurityCode(code) {
 
 export async function verifySecurityCode(code) {
   if (!isValidCode(code)) return { ok: false, error: '请输入 6 位数字安全码' }
-  const savedHash = safeGet(localStorage, SECURITY_HASH_KEY)
+  const savedHash = safeGet('localStorage', SECURITY_HASH_KEY)
   if (!savedHash) return { ok: false, error: '尚未设置安全码' }
   try {
     const hash = await sha256(code)
@@ -74,15 +89,13 @@ export async function verifySecurityCode(code) {
 }
 
 export function isSessionVerified() {
-  return safeGet(sessionStorage, SECURITY_SESSION_KEY) === 'true'
+  return safeGet('sessionStorage', SECURITY_SESSION_KEY) === 'true'
 }
 
 export function markSessionVerified() {
-  safeSet(sessionStorage, SECURITY_SESSION_KEY, 'true')
+  safeSet('sessionStorage', SECURITY_SESSION_KEY, 'true')
 }
 
 export function clearSessionVerified() {
-  try {
-    sessionStorage.removeItem(SECURITY_SESSION_KEY)
-  } catch {}
+  safeRemove('sessionStorage', SECURITY_SESSION_KEY)
 }
