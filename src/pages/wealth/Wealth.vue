@@ -62,12 +62,36 @@ function openEditTarget() {
 }
 
 function normalizeMoneyInput(value) {
-  const raw = String(value).trim()
+  const raw = String(value)
   if (raw === '') return ''
+  // 只允许数字 + 小数点；至多保留一个小数点；小数点后最多 2 位
   const cleaned = raw.replace(/[^\d.]/g, '')
-  const [intPart, ...decimalParts] = cleaned.split('.')
-  if (!decimalParts.length) return intPart
-  return `${intPart}.${decimalParts.join('').slice(0, 2)}`
+  const dotIdx = cleaned.indexOf('.')
+  if (dotIdx === -1) return cleaned
+  const intPart = cleaned.slice(0, dotIdx)
+  const decPart = cleaned.slice(dotIdx + 1).replace(/\./g, '').slice(0, 2)
+  return `${intPart}.${decPart}`
+}
+
+/**
+ * 给金额输入框的 @input 用：只在 normalize 真的改了值时才写回，
+ * 并把光标回到合适位置 — 避免删字符时光标乱跳。
+ * setter 是一个 (newValue) => void，由调用方提供（绑到对应 ref）。
+ */
+function handleMoneyInput(event, setter) {
+  const el = event.target
+  const raw = el.value
+  const normalized = normalizeMoneyInput(raw)
+  if (raw === normalized) {
+    setter(raw)
+    return
+  }
+  const removed = raw.length - normalized.length
+  const pos = Math.max(0, (el.selectionStart ?? raw.length) - removed)
+  setter(normalized)
+  requestAnimationFrame(() => {
+    if (document.activeElement === el) el.setSelectionRange(pos, pos)
+  })
 }
 
 function saveAmount() {
@@ -408,13 +432,12 @@ const fireFormulaText = computed(() => {
           <div class="flex items-center gap-2">
             <span class="text-xl text-ink-400">{{ balance.currency }}</span>
             <input
-              v-model="editAmountValue"
-              type="number"
-              step="0.01"
-              min="0"
+              :value="editAmountValue"
+              type="text"
+              inputmode="decimal"
               class="input flex-1 text-lg font-mono"
               placeholder="0.00"
-              @input="editAmountValue = normalizeMoneyInput($event.target.value)"
+              @input="handleMoneyInput($event, v => editAmountValue = v)"
               @keydown.enter="saveAmount"
               autofocus
             />
@@ -438,13 +461,12 @@ const fireFormulaText = computed(() => {
           <div class="flex items-center gap-2">
             <span class="text-xl text-ink-400">{{ balance.currency }}</span>
             <input
-              v-model="editTargetValue"
-              type="number"
-              step="0.01"
-              min="1"
+              :value="editTargetValue"
+              type="text"
+              inputmode="decimal"
               class="input flex-1 text-lg font-mono"
               placeholder="100000.00"
-              @input="editTargetValue = normalizeMoneyInput($event.target.value)"
+              @input="handleMoneyInput($event, v => editTargetValue = v)"
               @keydown.enter="saveTarget"
               autofocus
             />
@@ -468,12 +490,11 @@ const fireFormulaText = computed(() => {
         <div>
           <label class="block text-sm text-ink-400 mb-1.5">年支出（{{ balance.currency }}）</label>
           <input
-            v-model.number="fire.annualExpense"
-            type="number"
-            step="0.01"
-            min="0"
+            :value="fire.annualExpense"
+            type="text"
+            inputmode="decimal"
             class="input w-full font-mono"
-            @input="fire.annualExpense = normalizeMoneyInput($event.target.value)"
+            @input="handleMoneyInput($event, v => fire.annualExpense = v)"
           />
           <p class="text-xs text-ink-400 mt-1.5">{{ flavorMeta.hint }}</p>
         </div>
