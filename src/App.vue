@@ -4,6 +4,8 @@
  *
  * 受保护页面通过路由元数据 meta.requiresAuth 走安全码门禁，
  * 这里再额外提供「我的财富 / 密码本」两个 tab 在受保护路由间切换。
+ *
+ * 顶栏左侧的图标 / 标题 / 英文副标题会跟着当前路由变；安全页面用默认外壳。
  */
 import { computed } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
@@ -11,6 +13,15 @@ import ThemeToggle from './components/ThemeToggle.vue'
 
 const route = useRoute()
 const showTabs = computed(() => Boolean(route.meta?.requiresAuth))
+
+// 路由名 -> 顶栏品牌
+const BRANDS = {
+  wealth:    { emoji: '💰', title: '我的财富', subtitle: 'My Wealth' },
+  passwords: { emoji: '🔐', title: '密码本',   subtitle: 'My Passwords' }
+}
+const DEFAULT_BRAND = BRANDS.wealth
+
+const brand = computed(() => BRANDS[route.name] || DEFAULT_BRAND)
 </script>
 
 <template>
@@ -22,11 +33,11 @@ const showTabs = computed(() => Boolean(route.meta?.requiresAuth))
           <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500
                       flex items-center justify-center text-white text-lg shadow-lg shadow-primary-500/30
                       shrink-0">
-            💰
+            {{ brand.emoji }}
           </div>
           <div class="min-w-0">
-            <h1 class="text-lg font-bold truncate">我的财富</h1>
-            <p class="text-xs text-ink-400 hidden sm:block">My Wealth</p>
+            <h1 class="text-lg font-bold truncate">{{ brand.title }}</h1>
+            <p class="text-xs text-ink-400 hidden sm:block">{{ brand.subtitle }}</p>
           </div>
         </div>
 

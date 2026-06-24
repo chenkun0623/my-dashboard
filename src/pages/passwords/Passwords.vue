@@ -2,8 +2,9 @@
 /**
  * 密码本页 — 列表 / 搜索 / 筛选 / 排序 / 增删改 / 导入导出。
  *
- * 进入时调用 useVault.unlock() 解密。失败时显示「重新输入安全码」提示。
- * 离开时不主动 lock（同会话内切回来不必重新派生 key）。
+ * 安全码验证由路由守卫统一负责，这里不再做二次输入。
+ * 进入时 unlock：成功 → 渲染；失败 → 直接跳 verify，本页不显示提示界面。
+ * 离开时 lock，清掉派生 key。
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -11,39 +12,31 @@ import Modal from '../../components/Modal.vue'
 import PasswordCard from './PasswordCard.vue'
 import PasswordEditModal from './PasswordEditModal.vue'
 import ImportExportModal from './ImportExportModal.vue'
+import { clearSessionVerified } from '../../composables/useSecurityCode'
 import { useVault } from '../../composables/useVault'
 
 const router = useRouter()
 const vault = useVault()
 
-// 解锁状态：null = 加载中，'ok' = 成功，'fail' = 失败
+// 解锁状态：'loading' = 解锁中，'ok' = 成功（失败时直接跳路由，不会停在这里）
 const unlockState = ref('loading')
-const unlockError = ref('')
 
 onMounted(async () => {
   try {
     await vault.unlock()
     unlockState.value = 'ok'
-  } catch (err) {
-    unlockState.value = 'fail'
-    unlockError.value = err?.message || '解锁失败'
+  } catch {
+    // 内存里没有原文（刷新后）或解密失败 — 都走守卫重新验证。
+    // 清掉会话标记，强制 verify 页弹出。
+    clearSessionVerified()
+    vault.lock()
+    router.replace({ path: '/security/verify', query: { redirect: '/passwords' } })
   }
 })
 
 onBeforeUnmount(() => {
   vault.lock()
 })
-
-function reverify() {
-  // 走守卫路径重新输入；清掉会话验证位以强制 verify。
-  // useSecurityCode.clearSessionVerified 会同步清掉内存里的 plaintext，
-  // 下一次 verify 成功会重新塞进去。
-  import('../../composables/useSecurityCode').then((m) => {
-    m.clearSessionVerified()
-    vault.lock()
-    router.replace({ path: '/security/verify', query: { redirect: '/passwords' } })
-  })
-}
 
 // 搜索 / 筛选 / 排序状态
 const searchText = ref('')
@@ -195,15 +188,9 @@ const exportData = computed(() => vault.exportPlain())
       </div>
     </div>
 
-    <!-- 解锁中 -->
+    <!-- 解锁中（失败时已经被 router.replace 跳走，不会停在这） -->
     <div v-if="unlockState === 'loading'" class="card p-6 text-center text-sm text-ink-400">
       正在解锁密码库...
-    </div>
-
-    <!-- 解锁失败 -->
-    <div v-else-if="unlockState === 'fail'" class="card p-6 space-y-3">
-      <p class="text-sm text-rose-400">{{ unlockError }}</p>
-      <button type="button" class="btn-primary" @click="reverify">重新输入安全码</button>
     </div>
 
     <!-- 正常显示 -->

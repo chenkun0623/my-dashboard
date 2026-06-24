@@ -1,5 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { hasSecurityCode, isSessionVerified } from '../composables/useSecurityCode'
+import {
+  getActiveSecurityCode,
+  hasSecurityCode,
+  isSessionVerified
+} from '../composables/useSecurityCode'
 import Wealth from '../pages/wealth/Wealth.vue'
 
 const DEFAULT_PROTECTED_PATH = '/wealth'
@@ -68,9 +72,17 @@ router.beforeEach((to) => {
     return { path: '/security/setup', query: { redirect: redirectQuery(to) } }
   }
 
-  if (verified) return true
+  if (!verified) {
+    return { path: '/security/verify', query: { redirect: redirectQuery(to) } }
+  }
 
-  return { path: '/security/verify', query: { redirect: redirectQuery(to) } }
+  // 密码本需要安全码原文派生 AES key；原文只活在内存里，刷新页面后内存清空。
+  // 这时即使 sessionStorage 标记还在，也得回 verify 拿一次原文。
+  if (to.name === 'passwords' && !getActiveSecurityCode()) {
+    return { path: '/security/verify', query: { redirect: redirectQuery(to) } }
+  }
+
+  return true
 })
 
 export default router
