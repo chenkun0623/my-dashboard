@@ -19,6 +19,7 @@ const activeTab = ref(props.mode)
 const importText = ref('')
 const importMode = ref('merge') // 'merge' | 'replace'
 const error = ref('')
+const confirmEmptyReplace = ref(false)
 
 watch(
   () => props.modelValue,
@@ -28,12 +29,18 @@ watch(
       importText.value = ''
       importMode.value = 'merge'
       error.value = ''
+      confirmEmptyReplace.value = false
     }
   }
 )
 
+watch([importText, importMode], () => {
+  confirmEmptyReplace.value = false
+})
+
 function close() {
   emit('update:modelValue', false)
+  confirmEmptyReplace.value = false
 }
 
 function todayStamp() {
@@ -71,9 +78,18 @@ function doImport() {
     error.value = '应为账号数组'
     return
   }
+  if (importMode.value === 'replace' && parsed.length === 0 && !confirmEmptyReplace.value) {
+    confirmEmptyReplace.value = true
+    return
+  }
   emit('import', { entries: parsed, mode: importMode.value })
+  confirmEmptyReplace.value = false
   close()
 }
+
+const importButtonLabel = computed(() =>
+  confirmEmptyReplace.value ? '确认清空全部账号？' : '导入'
+)
 
 const exportCount = computed(() => props.exportData.length)
 </script>
@@ -123,7 +139,7 @@ const exportCount = computed(() => props.exportData.length)
         <p v-if="error" class="text-sm text-rose-400">{{ error }}</p>
         <div class="flex justify-end gap-2">
           <button type="button" class="btn-ghost" @click="close">取消</button>
-          <button type="button" class="btn-primary" @click="doImport">导入</button>
+          <button type="button" class="btn-primary" @click="doImport">{{ importButtonLabel }}</button>
         </div>
       </div>
 

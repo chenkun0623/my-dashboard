@@ -30,7 +30,7 @@ function safeReadEnvelope() {
     if (!raw) return null
     const parsed = JSON.parse(raw)
     if (!parsed || typeof parsed !== 'object') return null
-    if (parsed.v !== SCHEMA_VERSION) return null
+    if (parsed.v !== SCHEMA_VERSION) return { __unknownVersion: true }
     return parsed
   } catch {
     return null
@@ -68,7 +68,7 @@ function dedupTags(list) {
   return [...seen.values()]
 }
 
-function normalizeEntry(input, { generateMissingTimestamps = false } = {}) {
+function normalizeEntry(input) {
   const now = nowIso()
   return {
     id: input.id || newId(),
@@ -80,8 +80,8 @@ function normalizeEntry(input, { generateMissingTimestamps = false } = {}) {
     password: String(input.password ?? ''),
     tags: dedupTags(input.tags),
     note: String(input.note ?? ''),
-    createdAt: input.createdAt || (generateMissingTimestamps ? now : now),
-    updatedAt: input.updatedAt || (generateMissingTimestamps ? now : now)
+    createdAt: input.createdAt || now,
+    updatedAt: input.updatedAt || now
   }
 }
 
@@ -114,6 +114,9 @@ async function unlock() {
   if (!code) throw new Error('安全码尚未在内存中')
 
   const envelope = safeReadEnvelope()
+  if (envelope && envelope.__unknownVersion) {
+    throw new Error('安全码不匹配或数据已损坏')
+  }
   if (!envelope) {
     // 新库：生成 salt，派生 key，置空 entries，写一份空库
     activeSalt = randomBytes(16)
@@ -165,7 +168,7 @@ async function unlock() {
 
   derivedKey = key
   activeSalt = salt
-  entries.value = list.map((e) => normalizeEntry(e, { generateMissingTimestamps: true }))
+  entries.value = list.map((e) => normalizeEntry(e))
   unlockedFlag.value = true
 }
 
@@ -188,8 +191,7 @@ async function updateEntry(id, patch) {
   const idx = entries.value.findIndex((e) => e.id === id)
   if (idx === -1) return null
   const merged = normalizeEntry(
-    { ...entries.value[idx], ...patch, id, createdAt: entries.value[idx].createdAt },
-    { generateMissingTimestamps: true }
+    { ...entries.value[idx], ...patch, id, createdAt: entries.value[idx].createdAt }
   )
   merged.updatedAt = nowIso()
   const list = entries.value.map((e, i) => (i === idx ? merged : e))
@@ -208,7 +210,7 @@ async function removeEntry(id) {
 
 async function replaceAll(list) {
   const normalized = (Array.isArray(list) ? list : []).map((e) =>
-    normalizeEntry(e, { generateMissingTimestamps: true })
+    normalizeEntry(e)
   )
   await persist(normalized)
   entries.value = normalized
@@ -217,7 +219,7 @@ async function replaceAll(list) {
 async function mergeImport(list) {
   const byId = new Map(entries.value.map((e) => [e.id, e]))
   for (const raw of Array.isArray(list) ? list : []) {
-    const candidate = normalizeEntry(raw, { generateMissingTimestamps: true })
+    const candidate = normalizeEntry(raw)
     const existing = byId.get(candidate.id)
     if (!existing) {
       byId.set(candidate.id, candidate)

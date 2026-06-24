@@ -3,7 +3,7 @@
  * 密码卡片 — 折叠默认显示项目+类型+标签；展开看完整明文。
  * 复制按钮兼容旧浏览器（utils/clipboard.js）；密码默认星号。
  */
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { copyText } from '../../utils/clipboard'
 
 const props = defineProps({
@@ -36,14 +36,23 @@ const updatedDate = computed(() => {
 
 // 每个复制按钮独立的 ✓/× 反馈状态
 const copyState = ref({}) // { username: 'ok' | 'fail' | undefined, ... }
+const pendingTimers = []
 function flashCopy(field, ok) {
   copyState.value = { ...copyState.value, [field]: ok ? 'ok' : 'fail' }
-  setTimeout(() => {
+  const id = setTimeout(() => {
     const next = { ...copyState.value }
     delete next[field]
     copyState.value = next
+    const idx = pendingTimers.indexOf(id)
+    if (idx !== -1) pendingTimers.splice(idx, 1)
   }, 1500)
+  pendingTimers.push(id)
 }
+
+onBeforeUnmount(() => {
+  for (const id of pendingTimers) clearTimeout(id)
+  pendingTimers.length = 0
+})
 
 async function doCopy(field) {
   const value = props.entry[field]

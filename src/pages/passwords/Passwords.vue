@@ -5,7 +5,7 @@
  * 进入时调用 useVault.unlock() 解密。失败时显示「重新输入安全码」提示。
  * 离开时不主动 lock（同会话内切回来不必重新派生 key）。
  */
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Modal from '../../components/Modal.vue'
 import PasswordCard from './PasswordCard.vue'
@@ -30,12 +30,17 @@ onMounted(async () => {
   }
 })
 
+onBeforeUnmount(() => {
+  vault.lock()
+})
+
 function reverify() {
   // 走守卫路径重新输入；清掉会话验证位以强制 verify。
   // useSecurityCode.clearSessionVerified 会同步清掉内存里的 plaintext，
   // 下一次 verify 成功会重新塞进去。
   import('../../composables/useSecurityCode').then((m) => {
     m.clearSessionVerified()
+    vault.lock()
     router.replace({ path: '/security/verify', query: { redirect: '/passwords' } })
   })
 }
