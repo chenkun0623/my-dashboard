@@ -163,6 +163,8 @@ async function onImport({ entries, mode }) {
     saveError.value = err?.message || '导入失败'
   }
 }
+
+const exportData = computed(() => vault.exportPlain())
 </script>
 
 <template>
@@ -171,6 +173,7 @@ async function onImport({ entries, mode }) {
       <h2 class="text-lg font-bold flex items-center gap-2">🔐 密码本</h2>
       <div class="flex items-center gap-2">
         <button
+          v-if="unlockState === 'ok'"
           type="button"
           class="btn-ghost text-xs"
           :title="sortMode === 'updated' ? '改为按名称排序' : '改为按更新时间排序'"
@@ -279,7 +282,7 @@ async function onImport({ entries, mode }) {
     <ImportExportModal
       v-model="ieOpen"
       :mode="ieMode"
-      :export-data="vault.exportPlain()"
+      :export-data="exportData"
       @import="onImport"
     />
 
