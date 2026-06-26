@@ -9,8 +9,9 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Claude
+# AI
 .agents/
 .claude/
 .codex/
 skills-lock.json
+docs
