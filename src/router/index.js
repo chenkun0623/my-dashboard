@@ -13,7 +13,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/security/setup',
+    path: '/settings',
+    name: 'settings',
+    component: () => import('../pages/settings/Settings.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     name: 'security-setup',
     component: () => import('../pages/security/SetupCode.vue'),
     meta: { public: true }
