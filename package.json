@@ -2,6 +2,7 @@
   "name": "my-dashboard-workspace",
   "private": true,
   "version": "0.1.0",
+  "packageManager": "pnpm@11.6.0",
   "scripts": {
     "dev:web": "pnpm --filter my-dashboard-web dev",
     "build:web": "pnpm --filter my-dashboard-web build",
