@@ -7,6 +7,12 @@ dist/
 .env.local
 .env.*.local
 
+# package manager lockfiles (kept local only)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+bun.lockb
+
 *.log
 .DS_Store
 Thumbs.db
