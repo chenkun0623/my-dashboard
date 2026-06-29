@@ -3,7 +3,7 @@
  * App 外壳 — 顶栏 + 主题切换 + 当前路由内容槽位
  *
  * 受保护页面通过路由元数据 meta.requiresAuth 走安全码门禁，
- * 这里再额外提供「我的财富 / 密码本」两个 tab 在受保护路由间切换。
+ * 这里提供「我的财富 / 密码本 / 设置」三个 tab 在受保护路由间切换。
  *
  * 顶栏左侧的图标 / 标题 / 英文副标题会跟着当前路由变；安全页面用默认外壳。
  */
@@ -17,7 +17,8 @@ const showTabs = computed(() => Boolean(route.meta?.requiresAuth))
 // 路由名 -> 顶栏品牌
 const BRANDS = {
   wealth:    { emoji: '💰', title: '我的财富', subtitle: 'My Wealth' },
-  passwords: { emoji: '🔐', title: '密码本',   subtitle: 'My Passwords' }
+  passwords: { emoji: '🔐', title: '密码本',   subtitle: 'My Passwords' },
+  settings:  { emoji: '⚙️', title: '设置',     subtitle: 'Settings' }
 }
 const DEFAULT_BRAND = BRANDS.wealth
 
@@ -59,6 +60,15 @@ const brand = computed(() => BRANDS[route.name] || DEFAULT_BRAND)
               : 'text-ink-400 border-transparent hover:text-ink-600 dark:hover:text-ink-200'"
           >
             密码本
+          </router-link>
+          <router-link
+            to="/settings"
+            class="px-3 py-1.5 border-b-2 transition-colors"
+            :class="route.name === 'settings'
+              ? 'text-primary-500 border-primary-500'
+              : 'text-ink-400 border-transparent hover:text-ink-600 dark:hover:text-ink-200'"
+          >
+            设置
           </router-link>
         </nav>
 
