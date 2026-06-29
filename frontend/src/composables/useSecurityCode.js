@@ -7,6 +7,10 @@
 export const SECURITY_HASH_KEY = 'my-dashboard:security-code-hash'
 export const SECURITY_SESSION_KEY = 'my-dashboard:security-verified'
 
+// 安全码原文：只活在本 tab 的 JS 内存里，永远不进任何 storage。
+// 财富页不需要它，密码本派生 AES key 时才用。clearSessionVerified 会清。
+let activeCode = null
+
 export function normalizeCodeInput(value) {
   return String(value ?? '').replace(/\D/g, '').slice(0, 6)
 }
@@ -68,6 +72,7 @@ export async function setSecurityCode(code) {
     const hash = await sha256(code)
     const saved = safeSet('localStorage', SECURITY_HASH_KEY, hash)
     if (!saved) return { ok: false, error: '安全码保存失败，请检查浏览器存储权限' }
+    activeCode = code
     return { ok: true }
   } catch (err) {
     return { ok: false, error: err?.message || '安全码生成失败' }
@@ -80,9 +85,11 @@ export async function verifySecurityCode(code) {
   if (!savedHash) return { ok: false, error: '尚未设置安全码' }
   try {
     const hash = await sha256(code)
-    return hash === savedHash
-      ? { ok: true }
-      : { ok: false, error: '安全码不一致' }
+    if (hash === savedHash) {
+      activeCode = code
+      return { ok: true }
+    }
+    return { ok: false, error: '安全码不一致' }
   } catch (err) {
     return { ok: false, error: err?.message || '安全码验证失败' }
   }
@@ -97,5 +104,10 @@ export function markSessionVerified() {
 }
 
 export function clearSessionVerified() {
+  activeCode = null
   safeRemove('sessionStorage', SECURITY_SESSION_KEY)
+}
+
+export function getActiveSecurityCode() {
+  return activeCode
 }

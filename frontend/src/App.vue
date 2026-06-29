@@ -2,8 +2,10 @@
 /**
  * App 外壳 — 顶栏 + 主题切换 + 当前路由内容槽位
  *
- * 页面内容由 vue-router 渲染。需要安全保护的页面在 router 里配置
- * meta.requiresAuth，统一走安全码门禁。受保护页面显示顶部导航。
+ * 受保护页面通过路由元数据 meta.requiresAuth 走安全码门禁，
+ * 这里提供「我的财富 / 密码本 / 设置」三个 tab 在受保护路由间切换。
+ *
+ * 顶栏左侧的图标 / 标题 / 英文副标题会跟着当前路由变；安全页面用默认外壳。
  */
 import { computed } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
@@ -12,11 +14,15 @@ import ThemeToggle from './components/ThemeToggle.vue'
 const route = useRoute()
 const showTabs = computed(() => Boolean(route.meta?.requiresAuth))
 
+// 路由名 -> 顶栏品牌
 const BRANDS = {
-  wealth: { emoji: '💰', title: '我的财富', subtitle: 'My Wealth' },
-  settings: { emoji: '⚙️', title: '设置', subtitle: 'Settings' }
+  wealth:    { emoji: '💰', title: '我的财富', subtitle: 'My Wealth' },
+  passwords: { emoji: '🔐', title: '密码本',   subtitle: 'My Passwords' },
+  settings:  { emoji: '⚙️', title: '设置',     subtitle: 'Settings' }
 }
-const brand = computed(() => BRANDS[route.name] || BRANDS.wealth)
+const DEFAULT_BRAND = BRANDS.wealth
+
+const brand = computed(() => BRANDS[route.name] || DEFAULT_BRAND)
 </script>
 
 <template>
@@ -45,6 +51,15 @@ const brand = computed(() => BRANDS[route.name] || BRANDS.wealth)
               : 'text-ink-400 border-transparent hover:text-ink-600 dark:hover:text-ink-200'"
           >
             我的财富
+          </router-link>
+          <router-link
+            to="/passwords"
+            class="px-3 py-1.5 border-b-2 transition-colors"
+            :class="route.name === 'passwords'
+              ? 'text-primary-500 border-primary-500'
+              : 'text-ink-400 border-transparent hover:text-ink-600 dark:hover:text-ink-200'"
+          >
+            密码本
           </router-link>
           <router-link
             to="/settings"
