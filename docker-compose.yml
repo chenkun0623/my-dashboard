@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: my_dashboard
       POSTGRES_USER: dashboard
-      POSTGRES_PASSWORD: dashboard_dev
+      POSTGRES_PASSWORD: dashboard_local_7kQ2x9
     ports:
       - "5432:5432"
     volumes:

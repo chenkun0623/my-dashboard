@@ -11,6 +11,7 @@ import {
   decrypt,
   deriveKey,
   encrypt,
+  PBKDF2_ITERATIONS,
   randomBytes
 } from '../utils/crypto'
 import { getActiveSecurityCode } from './useSecurityCode'
@@ -97,6 +98,7 @@ async function encryptEntries(list) {
   }
   return {
     v: SCHEMA_VERSION,
+    iter: PBKDF2_ITERATIONS,
     salt: b64encode(activeSalt),
     iv: b64encode(iv),
     data: b64encode(cipher)
@@ -144,9 +146,14 @@ async function unlock() {
     throw new Error('安全码不匹配或数据已损坏')
   }
 
+  // 旧库没有 iter 字段，按历史默认 10 万次解锁，保证已存数据可解；
+  // 新保存的数据会带上 iter 字段，之后按新次数派生。
+  const iterations =
+    Number.isInteger(envelope.iter) && envelope.iter > 0 ? envelope.iter : 100_000
+
   let key
   try {
-    key = await deriveKey(code, salt)
+    key = await deriveKey(code, salt, iterations)
   } catch {
     throw new Error('安全码不匹配或数据已损坏')
   }

@@ -1,9 +1,18 @@
 packages:
   - frontend
   - backend
+# 依赖版本强制收敛：上游包（express/ajv/autoprefixer）钉死了存在已知漏洞的旧版本
+overrides:
+  qs: 6.16.0
+  fast-uri: 3.1.7
+  browserslist: 4.28.9
+  brace-expansion: 1.1.18
+  js-yaml: 4.3.1
+
+# 允许这些包执行安装脚本（Prisma 生成客户端/下载引擎、esbuild 下载平台二进制）
 allowBuilds:
-  '@nestjs/core': set this to true or false
-  '@prisma/client': set this to true or false
-  '@prisma/engines': set this to true or false
-  esbuild: set this to true or false
-  prisma: set this to true or false
+  '@nestjs/core': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true

@@ -136,8 +136,8 @@ cp .env.example .env
 默认配置：
 
 ```env
-DATABASE_URL="postgresql://dashboard:dashboard_dev@localhost:5432/my_dashboard?schema=public"
-JWT_SECRET="change-me-in-production"
+DATABASE_URL="postgresql://dashboard:dashboard_local_7kQ2x9@localhost:5432/my_dashboard?schema=public"
+JWT_SECRET="replace-with-random-secret"
 JWT_EXPIRES_IN="7d"
 PORT=3000
 CORS_ORIGIN="http://localhost:5174"

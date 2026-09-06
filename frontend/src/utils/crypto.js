@@ -4,7 +4,9 @@
  * 仅依赖浏览器原生 crypto.subtle。useVault 用它来加密本地密码库。
  */
 
-const PBKDF2_ITERATIONS = 100_000
+// OWASP 建议 PBKDF2-SHA256 至少 60 万次迭代。
+// 注意：旧库数据按旧次数解锁（见 useVault 的 iter 兼容逻辑），不能直接改这里而不管旧数据。
+export const PBKDF2_ITERATIONS = 600_000
 const KEY_BITS = 256
 const HASH = 'SHA-256'
 
@@ -34,7 +36,7 @@ export function b64decode(str) {
   return out
 }
 
-export async function deriveKey(passwordString, saltBytes) {
+export async function deriveKey(passwordString, saltBytes, iterations = PBKDF2_ITERATIONS) {
   const subtle = ensureSubtle().subtle
   const baseKey = await subtle.importKey(
     'raw',
@@ -47,7 +49,7 @@ export async function deriveKey(passwordString, saltBytes) {
     {
       name: 'PBKDF2',
       salt: saltBytes,
-      iterations: PBKDF2_ITERATIONS,
+      iterations,
       hash: HASH
     },
     baseKey,
