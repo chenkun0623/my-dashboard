@@ -1,35 +1,12 @@
 /**
- * 后端 API 客户端 — 第一阶段只覆盖 health + mock 微信登录 + me。
+ * 后端 API 客户端 — 目前只覆盖 health。登录认证功能暂未接入。
  */
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-const TOKEN_KEY = 'my-dashboard:api-token'
-
-export function getApiToken() {
-  try {
-    return localStorage.getItem(TOKEN_KEY)
-  } catch {
-    return null
-  }
-}
-
-export function setApiToken(token) {
-  try {
-    localStorage.setItem(TOKEN_KEY, token)
-  } catch {}
-}
-
-export function clearApiToken() {
-  try {
-    localStorage.removeItem(TOKEN_KEY)
-  } catch {}
-}
 
 async function request(path, options = {}) {
-  const token = getApiToken()
   const headers = {
     Accept: 'application/json',
     ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {})
   }
 
@@ -70,12 +47,4 @@ export function apiPost(path, body) {
 
 export function healthCheck() {
   return apiGet('/health')
-}
-
-export function devWechatLogin(payload) {
-  return apiPost('/auth/dev-wechat-login', payload)
-}
-
-export function getCurrentUser() {
-  return apiGet('/auth/me')
 }

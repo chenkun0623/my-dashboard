@@ -7,12 +7,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// 占位模型：登录认证方案确定后再补充字段（原微信字段已随 remove_wechat_user 迁移移除）
 model User {
-  id            String   @id @default(cuid())
-  wechatOpenId  String   @unique
-  wechatUnionId String?
-  nickname      String?
-  avatarUrl     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
