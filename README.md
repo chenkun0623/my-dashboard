@@ -23,8 +23,6 @@ my-dashboard/
   - 清空更新记录
 - 后端设置页
   - 检测 API 连接
-  - mock 微信登录
-  - 查看当前后端用户
 - 暗色 / 浅色 / 跟随系统主题
 - PC / 移动端适配
 
@@ -32,19 +30,16 @@ my-dashboard/
 
 - NestJS API
 - PostgreSQL + Prisma
-- JWT 认证
-- mock 微信登录
-- 当前用户查询
 - 健康检查接口
 
-当前后端只是第一阶段基础能力，暂时还没有做财富数据同步和密码库同步。
+当前后端只是第一阶段基础能力：登录认证暂未接入，财富数据同步和密码库同步也还没做。
 
 ## 技术栈
 
 ### Frontend
 
 - Vue 3
-- Vite 5
+- Vite 8
 - Vue Router
 - Tailwind CSS
 - localStorage / sessionStorage
@@ -55,7 +50,6 @@ my-dashboard/
 - TypeScript
 - Prisma
 - PostgreSQL
-- JWT
 
 ### Workspace
 
@@ -88,10 +82,10 @@ my-dashboard/
     .env.example
     prisma/
       schema.prisma
+      migrations/
     src/
       main.ts
       app.module.ts
-      auth/
       health/
       prisma/
 ```
@@ -137,8 +131,6 @@ cp .env.example .env
 
 ```env
 DATABASE_URL="postgresql://dashboard:dashboard_local_7kQ2x9@localhost:5432/my_dashboard?schema=public"
-JWT_SECRET="replace-with-random-secret"
-JWT_EXPIRES_IN="7d"
 PORT=3000
 CORS_ORIGIN="http://localhost:5174"
 ```
@@ -194,45 +186,6 @@ GET /health
   "service": "my-dashboard-api",
   "time": "2026-06-23T12:00:00.000Z"
 }
-```
-
-### Mock WeChat Login
-
-```http
-POST /auth/dev-wechat-login
-Content-Type: application/json
-```
-
-请求：
-
-```json
-{
-  "mockOpenId": "dev-openid-chenkun",
-  "nickname": "chenkun",
-  "avatarUrl": ""
-}
-```
-
-响应：
-
-```json
-{
-  "accessToken": "jwt...",
-  "user": {
-    "id": "...",
-    "wechatOpenId": "dev-openid-chenkun",
-    "wechatUnionId": null,
-    "nickname": "chenkun",
-    "avatarUrl": ""
-  }
-}
-```
-
-### Current User
-
-```http
-GET /auth/me
-Authorization: Bearer <accessToken>
 ```
 
 ## 前端环境变量
@@ -292,29 +245,13 @@ frontend
 - `my-dashboard:theme`
 - `my-dashboard:security-code-hash`
 - `my-dashboard:security-verified`
-- `my-dashboard:api-token`
 
 ### 后端数据
 
-Phase 1 后端只存用户信息：
-
-```prisma
-model User {
-  id            String   @id @default(cuid())
-  wechatOpenId  String   @unique
-  wechatUnionId String?
-  nickname      String?
-  avatarUrl     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-```
-
-财富数据同步、密码库同步后续再做。
+后端目前只有一张最小 `User` 占位表（仅 id 和时间戳），登录认证方案确定后再补充字段。财富数据同步、密码库同步后续再做。
 
 ## 后续计划
 
-- 接入真实微信登录
 - 增加财富数据云同步
 - 增加密码库加密同步
 - 阿里云 ECS 部署
