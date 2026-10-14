@@ -7,9 +7,68 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 占位模型：登录认证方案确定后再补充字段（原微信字段已随 remove_wechat_user 迁移移除）
-model User {
+model Fund {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  name          String
+  category      String    @default("OTHER")
+  origFeeRate   Decimal   @default(0.015) @db.Decimal(8, 6)
+  discount      Decimal   @default(0.1) @db.Decimal(4, 3)
+  confirmLag    Int       @default(1)
+  redeemFeeTiers Json?
+  status        String    @default("ACTIVE")
+  lastSyncAt    DateTime?
+  lastSyncError String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  navs          Nav[]
+  plans         Plan[]
+  trades        Trade[]
+}
+
+model Nav {
   id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  fundId    String
+  date      DateTime @db.Date
+  unit      Decimal  @db.Decimal(10, 4)
+  accUnit   Decimal? @db.Decimal(10, 4)
+  dayGrowth Decimal? @db.Decimal(8, 6)
+  fund      Fund     @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  @@unique([fundId, date])
+  @@index([fundId, date])
+}
+
+model Plan {
+  id           String    @id @default(cuid())
+  fundId       String
+  freq         String
+  weekday      Int?
+  monthday     Int?
+  amount       Decimal   @db.Decimal(12, 2)
+  startDate    DateTime  @db.Date
+  endDate      DateTime? @db.Date
+  dividendMode String    @default("CASH")
+  status       String    @default("ACTIVE")
+  fund         Fund      @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  trades       Trade[]
+}
+
+model Trade {
+  id          String    @id @default(cuid())
+  fundId      String
+  planId      String?
+  kind        String
+  source      String
+  applyDate   DateTime  @db.Date
+  confirmDate DateTime  @db.Date
+  nav         Decimal   @db.Decimal(10, 4)
+  amount      Decimal   @default(0) @db.Decimal(14, 2)
+  fee         Decimal   @default(0) @db.Decimal(12, 2)
+  shares      Decimal   @default(0) @db.Decimal(16, 2)
+  status      String    @default("CONFIRMED")
+  note        String?
+  fund        Fund      @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  plan        Plan?     @relation(fields: [planId], references: [id], onDelete: SetNull)
+  @@unique([planId, applyDate, kind])
+  @@index([fundId, confirmDate])
 }
