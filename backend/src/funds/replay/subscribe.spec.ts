@@ -7,7 +7,7 @@ describe('subscribeShares', () => {
     const r = subscribeShares(1000, 0.0015, 1.04);
     expect(r.netAmount).toBeCloseTo(998.5022, 4);
     expect(r.fee).toBeCloseTo(1.4978, 4);
-    expect(r.shares).toBeCloseTo(959.91, 2); // round2(998.5022/1.04)=959.91
+    expect(r.shares).toBeCloseTo(960.1, 2); // round2(998.5022/1.04)=960.10
   });
 
   it('zero rate gives full amount', () => {
