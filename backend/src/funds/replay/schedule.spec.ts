@@ -71,9 +71,9 @@ describe('schedule', () => {
     expect(dates).toEqual(['2026-09-29']);
   });
 
-  it('nextDebitDate returns first upcoming debit', () => {
+  it('nextDebitDate returns first upcoming raw candidate', () => {
     expect(
       nextDebitDate({ freq: 'WEEKLY', weekday: 4, startDate: '2026-09-24' }, NAV, '2026-09-24'),
-    ).toBe('2026-09-28'); // 首期本身顺延到 09-28
+    ).toBe('2026-10-01'); // 顺延前日期；展示口径
   });
 });

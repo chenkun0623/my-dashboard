@@ -1,25 +1,25 @@
 // backend/src/funds/nav-fetcher.service.spec.ts
 import { NavFetcherService } from './nav-fetcher.service';
 
-const LIST_RESP = {
-  ErrCode: 0,
-  ErrMsg: '',
-  TotalCount: 2,
-  Data: {
-    LSJZList: [
-      { FSRQ: '2026-09-11', DWJZ: '1.2340', LJJZ: '1.5670', JZZZL: '0.5200' },
-      { FSRQ: '2026-09-10', DWJZ: '1.2276', LJJZ: '1.5606', JZZZL: '-0.3100' },
-    ],
-  },
-};
+// Data_netWorthTrend.x 为北京时间零点的毫秒时间戳
+const T1 = Date.parse('2026-09-11T00:00:00+08:00'); // 周五
+const T0 = Date.parse('2026-09-10T00:00:00+08:00'); // 周四
+const JS = [
+  'var fS_name = "易方达蓝筹精选混合";',
+  'var Data_netWorthTrend = [',
+  `{"x":${T1},"y":1.234,"equityReturn":"0.52","unitMoney":""},`,
+  `{"x":${T0},"y":1.2276,"equityReturn":"-0.31","unitMoney":""}`,
+  '];',
+  `var Data_ACWorthTrend = [[${T1},1.567],[${T0},1.5606]];`,
+].join('\n');
 
 describe('NavFetcherService', () => {
-  it('parses list rows: JZZZL percent -> decimal, ascending order', async () => {
+  it('parses pingzhongdata js: equityReturn percent -> decimal, ascending order', async () => {
     const svc = new NavFetcherService();
     const orig = globalThis.fetch;
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: async () => LIST_RESP,
+      text: async () => JS,
     } as Response);
     try {
       const rows = await svc.fetchHistory('005827');
@@ -31,6 +31,7 @@ describe('NavFetcherService', () => {
         dayGrowth: -0.0031,
       });
       expect(rows[1].dayGrowth).toBeCloseTo(0.0052, 6);
+      expect(rows[1].accUnit).toBe(1.567);
     } finally {
       globalThis.fetch = orig;
     }
@@ -41,7 +42,7 @@ describe('NavFetcherService', () => {
     const orig = globalThis.fetch;
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      text: async () => 'var fS_name = "易方达蓝筹精选混合";',
+      text: async () => JS,
     } as Response);
     try {
       expect(await svc.fetchName('005827')).toBe('易方达蓝筹精选混合');

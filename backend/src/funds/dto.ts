@@ -141,9 +141,10 @@ export class CreateTradeDto {
   applyDate!: string;
 
   /** SUBSCRIBE=扣款额；REDEEM 忽略（按份额×净值算）；分红=每份派息额 */
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  amount!: number;
+  amount?: number;
 
   @IsOptional()
   @IsNumber()

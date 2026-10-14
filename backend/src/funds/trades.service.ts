@@ -32,6 +32,7 @@ export class TradesService {
     const nav = Number(navRow.unit);
 
     if (dto.kind === 'SUBSCRIBE') {
+      if (!dto.amount || dto.amount <= 0) throw new BadRequestException('买入须指定正数金额');
       const rate = Number(fund.origFeeRate) * Number(fund.discount);
       const net = dto.amount / (1 + rate);
       const shares = Math.round((net / nav) * 100) / 100;
@@ -87,6 +88,7 @@ export class TradesService {
     }
 
     // 分红：amount = 每份派息额；红利 = 除息日持有份额 × 每份派息
+    if (!dto.amount || dto.amount <= 0) throw new BadRequestException('分红须指定每份派息额');
     const held = await this.heldSharesAt(fund.id, applyDate);
     const dividend = Math.round(held * dto.amount * 100) / 100;
     if (dto.kind === 'DIVIDEND_CASH') {

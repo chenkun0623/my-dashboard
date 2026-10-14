@@ -66,12 +66,15 @@ export function debitDates(plan: PlanSchedule, navDates: string[], until: string
   return out;
 }
 
-/** 下一期扣款日（展示用）：从今天起第一个 > from 的扣款日。 */
+/**
+ * 下一期扣款日（展示用）：日历规则下第一个 > from 的候选日。
+ * 注意：未来交易日序列未知，此处显示顺延前日期（遇节假日实际顺延）。
+ */
 export function nextDebitDate(
   plan: PlanSchedule,
-  navDates: string[],
+  _navDates: string[],
   from: string,
 ): string | null {
-  const all = debitDates(plan, navDates, addDays(from, 370));
-  return all.find((d) => d > from) ?? null;
+  const cands = rawCandidates(plan, addDays(from, 370));
+  return cands.find((d) => d > from) ?? null;
 }
