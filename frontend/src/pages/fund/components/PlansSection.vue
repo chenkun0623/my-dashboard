@@ -119,8 +119,7 @@ async function runBackfill() {
       </li>
     </ul>
 
-    <Modal :open="showCreate" @close="showCreate = false">
-      <h4 class="font-bold mb-3">新建定投计划</h4>
+    <Modal v-model="showCreate" title="新建定投计划">
       <div class="space-y-3">
         <select v-model="form.fundId" class="input w-full">
           <option value="" disabled>选择基金</option>
@@ -145,8 +144,11 @@ async function runBackfill() {
       </div>
     </Modal>
 
-    <Modal :open="!!backfillPlan" @close="backfillPlan = null">
-      <h4 class="font-bold mb-3">回填历史定投</h4>
+    <Modal
+      :model-value="!!backfillPlan"
+      title="回填历史定投"
+      @update:model-value="backfillPlan = null"
+    >
       <p class="text-xs text-ink-400 mb-3">按计划规则重放历史净值，生成模拟申购。金额变过就加分段。</p>
       <div class="space-y-2">
         <div v-for="(s, i) in backfillSegments" :key="i" class="flex gap-2">

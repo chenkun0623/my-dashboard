@@ -112,8 +112,11 @@ function fmt(v) {
       </table>
     </div>
 
-    <Modal :open="!!modal" @close="modal = null">
-      <h4 class="font-bold mb-3">{{ modal?.kind ? KIND_LABEL[modal.kind] : '' }}</h4>
+    <Modal
+      :model-value="!!modal"
+      :title="modal?.kind ? KIND_LABEL[modal.kind] : ''"
+      @update:model-value="modal = null"
+    >
       <div class="space-y-3">
         <select v-model="form.fundId" class="input w-full">
           <option value="" disabled>选择基金</option>
