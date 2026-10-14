@@ -44,6 +44,7 @@ CREATE TABLE "Plan" (
     "endDate" DATE,
     "dividendMode" TEXT NOT NULL DEFAULT 'CASH',
     "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Plan_pkey" PRIMARY KEY ("id")
 );
@@ -63,6 +64,7 @@ CREATE TABLE "Trade" (
     "shares" DECIMAL(16,2) NOT NULL DEFAULT 0,
     "status" TEXT NOT NULL DEFAULT 'CONFIRMED',
     "note" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Trade_pkey" PRIMARY KEY ("id")
 );

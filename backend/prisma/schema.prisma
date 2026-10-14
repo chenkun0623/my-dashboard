@@ -49,6 +49,7 @@ model Plan {
   endDate      DateTime? @db.Date
   dividendMode String    @default("CASH")
   status       String    @default("ACTIVE")
+  createdAt    DateTime  @default(now())
   fund         Fund      @relation(fields: [fundId], references: [id], onDelete: Cascade)
   trades       Trade[]
 }
@@ -67,6 +68,7 @@ model Trade {
   shares      Decimal   @default(0) @db.Decimal(16, 2)
   status      String    @default("CONFIRMED")
   note        String?
+  createdAt   DateTime  @default(now())
   fund        Fund      @relation(fields: [fundId], references: [id], onDelete: Cascade)
   plan        Plan?     @relation(fields: [planId], references: [id], onDelete: SetNull)
   @@unique([planId, applyDate, kind])
