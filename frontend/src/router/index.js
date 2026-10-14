@@ -5,6 +5,7 @@ import {
   isSessionVerified
 } from '../composables/useSecurityCode'
 import Wealth from '../pages/wealth/Wealth.vue'
+import Fund from '../pages/fund/Fund.vue'
 
 const DEFAULT_PROTECTED_PATH = '/wealth'
 
@@ -14,6 +15,12 @@ const routes = [
     path: '/wealth',
     name: 'wealth',
     component: Wealth,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/fund',
+    name: 'fund',
+    component: Fund,
     meta: { requiresAuth: true }
   },
   {
@@ -82,7 +89,7 @@ router.beforeEach((to) => {
     return { path: '/security/verify', query: { redirect: redirectQuery(to) } }
   }
 
-  // 密码本需要安全码原文派生 AES key；原文只活在内存里，刷新页面后内存清空。
+  // 密码需要安全码原文派生 AES key；原文只活在内存里，刷新页面后内存清空。
   // 这时即使 sessionStorage 标记还在，也得回 verify 拿一次原文。
   if (to.name === 'passwords' && !getActiveSecurityCode()) {
     return { path: '/security/verify', query: { redirect: redirectQuery(to) } }
