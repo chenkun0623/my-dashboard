@@ -3,11 +3,16 @@ packages:
   - backend
 # 依赖版本强制收敛：上游包（express/ajv/autoprefixer）钉死了存在已知漏洞的旧版本
 overrides:
-  qs: 6.16.0
-  fast-uri: 3.1.7
+  qs: 6.16.1
+  fast-uri: 3.1.9
   browserslist: 4.28.9
-  brace-expansion: 1.1.18
-  js-yaml: 4.3.1
+  brace-expansion: 1.1.21
+  js-yaml: 4.3.2
+  proxy-addr: 2.0.8
+  multer: 2.5.0
+  body-parser: 2.4.0
+  source-map-js: 1.2.2
+  postcss-selector-parser: 6.1.5
 
 # 允许这些包执行安装脚本（Prisma 生成客户端/下载引擎、esbuild 下载平台二进制）
 allowBuilds:
@@ -18,3 +23,22 @@ allowBuilds:
   esbuild: true
   prisma: true
   unrs-resolver: false
+
+minimumReleaseAgeExclude:
+  - '@rolldown/binding-android-arm-eabi@1.2.18'
+  - '@rolldown/binding-android-arm64@1.2.18'
+  - '@rolldown/binding-darwin-arm64@1.2.18'
+  - '@rolldown/binding-darwin-x64@1.2.18'
+  - '@rolldown/binding-freebsd-x64@1.2.18'
+  - '@rolldown/binding-linux-arm-gnueabihf@1.2.18'
+  - '@rolldown/binding-linux-arm64-gnu@1.2.18'
+  - '@rolldown/binding-linux-arm64-musl@1.2.18'
+  - '@rolldown/binding-linux-ppc64-gnu@1.2.18'
+  - '@rolldown/binding-linux-s390x-gnu@1.2.18'
+  - '@rolldown/binding-linux-x64-gnu@1.2.18'
+  - '@rolldown/binding-linux-x64-musl@1.2.18'
+  - '@rolldown/binding-openharmony-arm64@1.2.18'
+  - '@rolldown/binding-win32-arm64-msvc@1.2.18'
+  - '@rolldown/binding-win32-x64-msvc@1.2.18'
+  - rolldown@1.2.18
+  - vite@8.3.7
