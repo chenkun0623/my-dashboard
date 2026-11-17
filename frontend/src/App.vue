@@ -3,7 +3,7 @@
  * App 外壳 — 顶栏 + 主题切换 + 当前路由内容槽位
  *
  * 受保护页面通过路由元数据 meta.requiresAuth 走安全码门禁，
- * 这里提供「我的财富 / 密码本 / 设置」三个 tab 在受保护路由间切换。
+ * 这里提供「财富 / 基金 / 密码 / 设置」四个 tab 在受保护路由间切换。
  *
  * 顶栏左侧的图标 / 标题 / 英文副标题会跟着当前路由变；安全页面用默认外壳。
  */
@@ -16,9 +16,10 @@ const showTabs = computed(() => Boolean(route.meta?.requiresAuth))
 
 // 路由名 -> 顶栏品牌
 const BRANDS = {
-  wealth:    { emoji: '💰', title: '我的财富', subtitle: 'My Wealth' },
-  passwords: { emoji: '🔐', title: '密码本',   subtitle: 'My Passwords' },
-  settings:  { emoji: '⚙️', title: '设置',     subtitle: 'Settings' }
+  wealth:    { emoji: '💰', title: '财富',   subtitle: 'My Wealth' },
+  fund:      { emoji: '📈', title: '基金',   subtitle: 'My Funds' },
+  passwords: { emoji: '🔐', title: '密码', subtitle: 'My Passwords' },
+  settings:  { emoji: '⚙️', title: '设置',   subtitle: 'Settings' }
 }
 const DEFAULT_BRAND = BRANDS.wealth
 
@@ -50,7 +51,16 @@ const brand = computed(() => BRANDS[route.name] || DEFAULT_BRAND)
               ? 'text-primary-500 border-primary-500'
               : 'text-ink-400 border-transparent hover:text-ink-600 dark:hover:text-ink-200'"
           >
-            我的财富
+            财富
+          </router-link>
+          <router-link
+            to="/fund"
+            class="px-3 py-1.5 border-b-2 transition-colors"
+            :class="route.name === 'fund'
+              ? 'text-primary-500 border-primary-500'
+              : 'text-ink-400 border-transparent hover:text-ink-600 dark:hover:text-ink-200'"
+          >
+            基金
           </router-link>
           <router-link
             to="/passwords"
@@ -59,7 +69,7 @@ const brand = computed(() => BRANDS[route.name] || DEFAULT_BRAND)
               ? 'text-primary-500 border-primary-500'
               : 'text-ink-400 border-transparent hover:text-ink-600 dark:hover:text-ink-200'"
           >
-            密码本
+            密码
           </router-link>
           <router-link
             to="/settings"

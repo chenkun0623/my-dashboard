@@ -8,7 +8,7 @@ export const SECURITY_HASH_KEY = 'my-dashboard:security-code-hash'
 export const SECURITY_SESSION_KEY = 'my-dashboard:security-verified'
 
 // 安全码原文：只活在本 tab 的 JS 内存里，永远不进任何 storage。
-// 财富页不需要它，密码本派生 AES key 时才用。clearSessionVerified 会清。
+// 财富页不需要它，密码派生 AES key 时才用。clearSessionVerified 会清。
 let activeCode = null
 
 export function normalizeCodeInput(value) {

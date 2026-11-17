@@ -1,6 +1,6 @@
 <script setup>
 /**
- * 密码本页 — 列表 / 搜索 / 筛选 / 排序 / 增删改 / 导入导出。
+ * 密码页 — 列表 / 搜索 / 筛选 / 排序 / 增删改 / 导入导出。
  *
  * 安全码验证由路由守卫统一负责，这里不再做二次输入。
  * 进入时 unlock：成功 → 渲染；失败 → 直接跳 verify，本页不显示提示界面。
@@ -168,7 +168,7 @@ const exportData = computed(() => vault.exportPlain())
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between gap-3">
-      <h2 class="text-lg font-bold flex items-center gap-2">🔐 密码本</h2>
+      <h2 class="text-lg font-bold flex items-center gap-2">🔐 密码</h2>
       <div class="flex items-center gap-2">
         <button
           v-if="unlockState === 'ok'"
